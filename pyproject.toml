@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hierarchical-procedural-world"
+version = "1.0.0"
+description = "Deterministic semantic procedural worlds with hierarchical refinement and an optional Blender backend"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Procedural World contributors"}]
+dependencies = []
+
+[project.scripts]
+worldgen = "procedural_world.cli:main"
+
+[tool.setuptools]
+package-dir = {procedural_world = "."}
+packages = ["procedural_world", "procedural_world.core", "procedural_world.refinement", "procedural_world.world", "procedural_world.terrain", "procedural_world.urban", "procedural_world.buildings", "procedural_world.vegetation", "procedural_world.representation", "procedural_world.blender"]
+
+[tool.setuptools.package-data]
+procedural_world = ["README.md", "LICENSE", "docs/*.md", "examples/*.py", "examples/*.json"]
