@@ -97,7 +97,7 @@ just to force a settlement into the requested scene.
 | Control | Initial application capabilities |
 |---|---|
 | Structural 0–3 | 0: proxies; 1: building floors and individual vegetation; 2: rooms and circulation; 3: furniture proxies |
-| Geometric 0–3 | 0: coarse representation; buildings add roofs at 1 and windows/doors at 2; terrain supports three grid upgrades |
+| Geometric 0–4 | 0: coarse representation; buildings add roof/massing at 1, openings at 2, facade articulation at 3, and rooftop detail at 4; terrain supports three grid upgrades |
 | Temporal 0–1 | Per-node views of explicit source events; the core also validates aggregate event refinement |
 | Behavioral 0–1 | Resolves a coarse urban-process policy into explicit rule descriptors, without rewriting committed history |
 
@@ -196,6 +196,7 @@ cache isolation, exports and backend independence.
 ## Documentation map
 
 - [Architecture and invariants](docs/ARCHITECTURE.md)
+- [Building system](docs/BUILDINGS.md)
 - [Implementation status and limitations](docs/IMPLEMENTATION_STATUS.md)
 - [Extension contracts](docs/EXTENDING.md)
 - [Blender workflow](docs/BLENDER.md)

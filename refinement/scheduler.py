@@ -13,7 +13,7 @@ from ..representation.provider import realize
 from ..representation.fallback import fallback
 
 
-INTERIOR_TYPES={'Floor','Room','Corridor','FurnitureProxy'}
+INTERIOR_TYPES={'Floor','Room','Corridor','FurnitureProxy','Stairwell','ElevatorShaft'}
 
 
 def renderable(node,graph,context):
