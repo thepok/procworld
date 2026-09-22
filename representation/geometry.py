@@ -104,6 +104,9 @@ MATERIALS={
     'generic':(.6,.55,.68,1),'terrain':(.32,.41,.23,1),'water':(.12,.36,.50,1),
     'road':(.16,.17,.18,1),'path':(.57,.52,.40,1),'residential':(.65,.53,.39,1),
     'commercial':(.52,.57,.60,1),'industrial':(.42,.44,.44,1),'roof':(.27,.18,.14,1),
+    'brick':(.46,.24,.17,1),'stucco':(.72,.68,.58,1),'stone':(.55,.54,.50,1),
+    'concrete':(.48,.49,.47,1),'glass':(.25,.42,.48,1),'metal':(.38,.40,.42,1),
+    'tile_roof':(.38,.16,.10,1),
     'window':(.20,.36,.45,1),'door':(.23,.16,.10,1),'bark':(.27,.18,.10,1),
     'foliage':(.18,.34,.13,1),'park':(.31,.46,.22,1),'floor':(.66,.61,.49,1),
     'room':(.64,.65,.71,1),'furniture':(.48,.30,.16,1),'debug':(1.,.35,.08,1),
@@ -162,6 +165,26 @@ def triangulate_polygon(vertices):
         if not found: raise ValueError('Polygon is self-intersecting or numerically degenerate')
     triangles.append(tuple(indices))
     return tuple(triangles)
+
+
+def extrude_polygon(vertices,bottom_z,top_z,material='generic',name='prism') -> Mesh:
+    """Extrude a simple XY polygon between two Z planes.
+
+    ``vertices`` may carry arbitrary Z values; only XY is used for the footprint.
+    Concave polygons are supported through the existing ear-clipping triangulator.
+    """
+    footprint=tuple((float(p[0]),float(p[1]),float(bottom_z)) for p in vertices)
+    if len(footprint)<3 or top_z < bottom_z:
+        raise ValueError('Invalid polygon extrusion')
+    cap=triangulate_polygon(footprint)
+    n=len(footprint)
+    verts=footprint+tuple((p[0],p[1],float(top_z)) for p in footprint)
+    faces=[tuple(reversed(t)) for t in cap]
+    faces.extend(tuple(i+n for i in t) for t in cap)
+    for i in range(n):
+        j=(i+1)%n
+        faces.append((i,j,j+n,i+n))
+    return Mesh(verts,tuple(faces),material,name)
 
 
 def tube(points,width,material='generic',sides=6):

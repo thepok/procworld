@@ -1,30 +1,55 @@
 """Deterministic building birth/renovation/replacement schedules."""
 from ..core.node import Thing
-from ..core.domain import VolumeDomain,Bounds
+from ..core.domain import AreaDomain,PrismDomain
 from ..core.constraints import Commitment
 from ..core.event import Event,create_event
 from ..core.seed import RandomStream,derive_seed,stable_id
+from .footprint import footprint_for_parcel,polygon_centroid
+from .archetypes import choose_archetype
 
 
 def building_for_parcel(parcel,generation,birth,environment):
     rng=RandomStream(parcel.seed,'building',generation)
-    b=parcel.domain.bounds; x,y=b.minimum[:2]; w,h=b.size[:2]
-    inset=rng.uniform(2.5,5.0,'setback')
-    x0,y0,x1,y1=x+inset,y+inset,x+w-inset,y+h-inset
-    base=max(environment.height(px,py) for px in (x0,(x0+x1)/2,x1) for py in (y0,(y0+y1)/2,y1))+.2
     usage=parcel.semantic_state['land_use']
+    footprint_kind,xy,setback=footprint_for_parcel(parcel,rng,usage,birth)
+    cx,cy=polygon_centroid(xy)
+    samples=xy+((cx,cy),)
+    base=max(environment.height(px,py) for px,py in samples)+.2
+    area=AreaDomain(tuple((px,py,base) for px,py in xy))
     floors=rng.integer(1,3,'floors')+max(0,int((birth-1850)//75))
     if usage=='commercial': floors+=2
     if usage=='industrial': floors=min(3,floors)
-    floors=min(12,floors); storey=3.2; roof=1.8; height=floors*storey+roof
-    state={'footprint':[x0,y0,x1,y1],'height':height,'floor_count':floors,'storey_height':storey,
-           'roof_height':roof,'usage':usage,'construction_time':birth,'condition':1.,
-           'last_renovation':birth,'condition_decay':.006,'style_seed':derive_seed(parcel.seed,'style',generation),
-           'floor_area':(x1-x0)*(y1-y0)*floors,'generation':generation}
-    commitments=tuple(Commitment(k,state[k]) for k in ('footprint','height','floor_count','usage','construction_time','floor_area'))
+    floors=min(12,floors)
+    storey=3.2 if usage!='industrial' else rng.uniform(3.6,5.2,'industrial_storey')
+    archetype,style=choose_archetype(usage,birth,rng)
+    roof=0.35 if style['roof_form']=='flat' else rng.uniform(1.2,2.4,'roof_height')
+    height=floors*storey+roof
+    footprint_area=area.area
+    state={
+        'footprint':[[float(x),float(y)] for x,y in xy],
+        'footprint_kind':footprint_kind,
+        'footprint_area':footprint_area,
+        'setback':setback,
+        'height':height,
+        'floor_count':floors,
+        'storey_height':storey,
+        'roof_height':roof,
+        'usage':usage,
+        'archetype':archetype,
+        **style,
+        'construction_time':birth,
+        'condition':1.,
+        'last_renovation':birth,
+        'condition_decay':.006,
+        'style_seed':derive_seed(parcel.seed,'style',generation),
+        'floor_area':footprint_area*floors,
+        'generation':generation,
+    }
+    commitments=tuple(Commitment(k,state[k]) for k in (
+        'footprint','footprint_kind','footprint_area','height','floor_count','usage','construction_time','floor_area'))
     return Thing(stable_id(parcel.id,'Building',generation),'Building',derive_seed(parcel.seed,'building',generation),
-                 VolumeDomain(Bounds((x0,y0,base),(x1,y1,base+height))),state,(parcel.id,),created_at=birth,
-                 commitments=commitments,provenance={'generator':'building.lifecycle','version':'1.0.0'})
+                 PrismDomain(area,base,base+height),state,(parcel.id,),created_at=birth,
+                 commitments=commitments,provenance={'generator':'building.lifecycle','version':'2.0.0'})
 
 
 def lifecycle_events(parcel,first_birth,context,process_id,expansion_id=None):
