@@ -17,6 +17,7 @@ def default_registry():
         ('Road','Thing',False,'Roads'),('Block','Thing',True,'Debug'),('Parcel','Thing',True,'Debug'),
         ('Building','Thing',False,'Buildings'),('Floor','Thing',False,'Props'),
         ('Room','Thing',False,'Props'),('Corridor','Thing',False,'Props'),
+        ('Stairwell','Thing',False,'Props'),('ElevatorShaft','Thing',False,'Props'),
         ('Furniture','Thing',False,'Props'),('FurnitureProxy','Furniture',False,'Props'),
         ('Vegetation','Thing',False,'Vegetation'),('Forest','Vegetation',False,'Vegetation'),
         ('Park','Vegetation',False,'Vegetation'),('Tree','Vegetation',False,'Vegetation'),
@@ -24,17 +25,18 @@ def default_registry():
         r.register_type(name,parent,container,category)
     register_events(r)
     from ..urban.city_growth import CityGrowthProcess
-    r.register('processes','UrbanGrowthProcess',CityGrowthProcess,'1.0.0')
+    r.register('processes','UrbanGrowthProcess',CityGrowthProcess,'1.1.0')
     from ..refinement.refiner import GeometricRefiner,HistoricalRefiner,UrbanBehaviorRefiner
-    from ..buildings.structure import BuildingFloorsRefiner,FloorRoomsRefiner,RoomFurnitureRefiner
+    from ..buildings.structure import BuildingFloorsRefiner,BuildingCoreRefiner,FloorRoomsRefiner,RoomFurnitureRefiner
     from ..vegetation.vegetation import VegetationRefiner,VegetationAreaProvider,TreeProvider
     from ..terrain.terrain_geometry import TerrainProvider,WaterProvider,RoadProvider
-    from ..buildings.geometry import BuildingProvider,InteriorProvider,SettlementMassProvider
+    from ..buildings.geometry import BuildingProvider,InteriorProvider,BuildingCoreProvider,SettlementMassProvider
     for refiner in (GeometricRefiner(),HistoricalRefiner(),UrbanBehaviorRefiner(),BuildingFloorsRefiner(),
-                    FloorRoomsRefiner(),RoomFurnitureRefiner(),VegetationRefiner()):
+                    BuildingCoreRefiner(),FloorRoomsRefiner(),RoomFurnitureRefiner(),VegetationRefiner()):
         r.register_refiner(refiner)
     for provider in (TerrainProvider(),WaterProvider(),RoadProvider(),BuildingProvider(),InteriorProvider(),
-                     SettlementMassProvider(),VegetationAreaProvider(),TreeProvider()):
+                     BuildingCoreProvider(),SettlementMassProvider(),VegetationAreaProvider(),TreeProvider()):
         r.register_representation(provider)
-    r.versions.update({'core':'1.0.0','fields':'1.0.0','settlement_policy':'1.0.0','hydrology':'1.0.0'})
+    r.versions.update({'core':'1.0.0','fields':'1.0.0','settlement_policy':'1.0.0','hydrology':'1.0.0',
+                       'building_lifecycle':'2.0.0','building_archetypes':'1.0.0'})
     return r

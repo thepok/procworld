@@ -13,6 +13,6 @@ def material(name):
     bsdf=result.node_tree.nodes.get('Principled BSDF')
     if bsdf:
         bsdf.inputs['Base Color'].default_value=color
-        bsdf.inputs['Roughness'].default_value=.25 if name in {'water','window'} else .82
-        if 'Metallic' in bsdf.inputs: bsdf.inputs['Metallic'].default_value=.15 if name=='window' else 0.
+        bsdf.inputs['Roughness'].default_value=.25 if name in {'water','window','glass'} else (.42 if name=='metal' else .82)
+        if 'Metallic' in bsdf.inputs: bsdf.inputs['Metallic'].default_value=.65 if name=='metal' else (.15 if name in {'window','glass'} else 0.)
     return result
