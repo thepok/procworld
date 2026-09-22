@@ -16,7 +16,7 @@ def default_registry():
         ('City','Settlement',True,'Buildings'),('District','Thing',True,'Debug'),
         ('Road','Thing',False,'Roads'),('Block','Thing',True,'Debug'),('Parcel','Thing',True,'Debug'),
         ('Building','Thing',False,'Buildings'),('Floor','Thing',False,'Props'),
-        ('Room','Thing',False,'Props'),('Corridor','Thing',False,'Props'),
+        ('Room','Thing',False,'Props'),('Corridor','Thing',False,'Props'),('VerticalCore','Thing',False,'Props'),
         ('Furniture','Thing',False,'Props'),('FurnitureProxy','Furniture',False,'Props'),
         ('Vegetation','Thing',False,'Vegetation'),('Forest','Vegetation',False,'Vegetation'),
         ('Park','Vegetation',False,'Vegetation'),('Tree','Vegetation',False,'Vegetation'),
@@ -36,5 +36,6 @@ def default_registry():
     for provider in (TerrainProvider(),WaterProvider(),RoadProvider(),BuildingProvider(),InteriorProvider(),
                      SettlementMassProvider(),VegetationAreaProvider(),TreeProvider()):
         r.register_representation(provider)
-    r.versions.update({'core':'1.0.0','fields':'1.0.0','settlement_policy':'1.0.0','hydrology':'1.0.0'})
+    r.versions.update({'core':'1.1.0','fields':'1.0.0','settlement_policy':'1.0.0','hydrology':'1.0.0',
+                       'building_lifecycle':'2.0.0'})
     return r

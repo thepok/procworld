@@ -219,6 +219,9 @@ class AreaDomain(Domain):
             return False
         if isinstance(child, AreaDomain):
             outline = child.vertices
+        elif isinstance(getattr(child, 'area', None), AreaDomain):
+            # Surface/prism-like domains expose their authoritative 2D footprint.
+            outline = child.area.vertices
         else:
             x,y,_ = b.minimum; X,Y,_ = b.maximum
             outline = ((x,y,0),(X,y,0),(X,Y,0),(x,Y,0))
@@ -262,6 +265,50 @@ class SurfaceDomain(Domain):
 
 
 @dataclass(frozen=True, slots=True)
+class PrismDomain(Domain):
+    """A true polygonal footprint extruded through a vertical interval.
+
+    Unlike :class:`VolumeDomain`, this does not collapse an irregular building
+    into its axis-aligned bounding box.  It is useful for buildings, floors,
+    rooms, retaining walls, and any other vertically extruded planar region.
+    """
+    area: AreaDomain
+    minimum_z: float
+    maximum_z: float
+    type_id: ClassVar[str] = 'prism'
+    def __post_init__(self):
+        if not isinstance(self.area, AreaDomain):
+            raise TypeError('PrismDomain requires an AreaDomain footprint')
+        if (not math.isfinite(self.minimum_z) or not math.isfinite(self.maximum_z)
+                or self.minimum_z > self.maximum_z):
+            raise ValueError('Invalid prism height range')
+    @property
+    def bounds(self):
+        b=self.area.bounds
+        return Bounds((*b.minimum[:2],self.minimum_z),(*b.maximum[:2],self.maximum_z))
+    def contains_point(self,p):
+        return self.minimum_z-EPS <= p[2] <= self.maximum_z+EPS and self.area.contains_point(p)
+    def contains_domain(self,child):
+        b=child.bounds
+        if b.minimum[2] < self.minimum_z-EPS or b.maximum[2] > self.maximum_z+EPS:
+            return False
+        child_area=getattr(child,'area',None)
+        if isinstance(child,AreaDomain):
+            child_area=child
+        if isinstance(child_area,AreaDomain):
+            return self.area.contains_domain(child_area)
+        # Conservative for domains without an explicit footprint: their XY AABB
+        # must fit inside the prism.
+        x,y,_=b.minimum; X,Y,_=b.maximum
+        if X-x <= EPS or Y-y <= EPS:
+            return all(self.area.contains_point(p) for p in b.corners)
+        return self.area.contains_domain(AreaDomain.rectangle(x,y,X,Y,self.minimum_z))
+    def to_data(self):
+        return {'type':self.type_id,'area':self.area.to_data(),
+                'minimum_z':self.minimum_z,'maximum_z':self.maximum_z}
+
+
+@dataclass(frozen=True, slots=True)
 class NetworkDomain(Domain):
     vertices: tuple[Vec3, ...]
     edges: tuple[tuple[int,int], ...]
@@ -294,6 +341,7 @@ DOMAIN_READERS: dict[str, Callable[[dict], Domain]] = {
     'area': lambda d: AreaDomain(tuple(d['vertices'])),
     'volume': lambda d: VolumeDomain(Bounds(d['minimum'],d['maximum'])),
     'surface': lambda d: SurfaceDomain(domain_from_data(d['area']),d['minimum_z'],d['maximum_z']),
+    'prism': lambda d: PrismDomain(domain_from_data(d['area']),d['minimum_z'],d['maximum_z']),
     'network': lambda d: NetworkDomain(tuple(d['vertices']),tuple(d['edges']),d.get('width',0)),
 }
 

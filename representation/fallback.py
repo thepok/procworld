@@ -1,8 +1,8 @@
 """A missing specialized generator is normal, not a rendering failure."""
 from ..core.domain import (UnboundedDomain,PointDomain,CurveDomain,AreaDomain,VolumeDomain,
-                           SurfaceDomain,NetworkDomain)
+                           SurfaceDomain,PrismDomain,NetworkDomain)
 from ..core.scope import Transform
-from .geometry import GeometryBundle,Instance,Mesh,box_instance,ribbon,triangulate_polygon,tube
+from .geometry import GeometryBundle,Instance,Mesh,box_instance,ribbon,triangulate_polygon,tube,extrude_polygon
 
 
 FALLBACKS={}
@@ -30,6 +30,8 @@ register_fallback(VolumeDomain,lambda d,m:GeometryBundle(instances=(box_instance
 register_fallback(SurfaceDomain,lambda d,m:GeometryBundle(meshes=(Mesh(
     tuple((p[0],p[1],d.minimum_z) for p in d.area.vertices),
     triangulate_polygon(d.area.vertices),m),)))
+register_fallback(PrismDomain,lambda d,m:GeometryBundle(meshes=(
+    extrude_polygon(d.area.vertices,d.minimum_z,d.maximum_z,m,'prism_fallback'),)))
 register_fallback(NetworkDomain,lambda d,m:GeometryBundle(meshes=tuple(
     tube((d.vertices[a],d.vertices[b]),max(.1,d.width),m) for a,b in d.edges)))
 

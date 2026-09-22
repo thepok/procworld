@@ -107,6 +107,8 @@ advances its own structural state once when it creates Floors; those Floors
 advance their own states when creating Rooms. They do not all share a universal
 "LOD 3" interpretation. Geometric capabilities are provider-specific.
 
+Buildings are **not restricted to rectangular boxes**. The semantic footprint is a polygonal `PrismDomain`; the built-in lifecycle can emit rectangular, L-, T-, U-, stepped and chamfered footprints, and floors preserve that polygon during structural refinement. See [Building subsystem](docs/BUILDINGS.md).
+
 `WorldSettings.behavioral_level` chooses among the initial growth policies
 (0: coarse, 1: slope-aware, 2: additional fertility/elevation costs). That is a
 world rule input. Increasing the behavioral *refinement request* exposes the
@@ -196,6 +198,7 @@ cache isolation, exports and backend independence.
 ## Documentation map
 
 - [Architecture and invariants](docs/ARCHITECTURE.md)
+- [Building subsystem](docs/BUILDINGS.md)
 - [Implementation status and limitations](docs/IMPLEMENTATION_STATUS.md)
 - [Extension contracts](docs/EXTENDING.md)
 - [Blender workflow](docs/BLENDER.md)
